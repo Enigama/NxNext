@@ -25,9 +25,9 @@ export async function signup(
   }
 
   const hasedPassword = hashUserPassword(password);
+  let userId: number | bigint;
   try {
-    const userId = createUser(email, hasedPassword);
-    await authenticatePass(userId);
+    userId = createUser(email, hasedPassword);
   } catch (error) {
     //@ts-expect-error SQL error code
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -37,6 +37,7 @@ export async function signup(
         },
       };
     }
+    console.error('Error creating user:', error);
 
     return {
       errors: {
@@ -44,6 +45,7 @@ export async function signup(
       },
     };
   }
+  await authenticatePass(userId);
 }
 
 export async function login(

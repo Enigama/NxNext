@@ -1,4 +1,5 @@
 import sql, { Database } from 'better-sqlite3';
+import { Session, User } from './user';
 
 const db = sql('training.db') as Database;
 
@@ -45,6 +46,22 @@ if (!hasTrainings) {
     ('Gaming', '/gaming.jpg', 'A fun way to improve hand-eye coordination and reflexes.'),
     ('Sailing', '/sailing.jpg', 'A relaxing way to enjoy the outdoors and improve balance.');
 `);
+}
+
+export function getUserById(id: string) {
+  const dbUser = db
+    .prepare<[string], User>('SELECT id, email FROM users WHERE id = ?')
+    .get(id);
+  return dbUser;
+}
+
+export function getSession(sessionId: string) {
+  return db
+    .prepare<
+      [string],
+      Session
+    >(`SELECT id, expires_at, user_id FROM sessions WHERE id = ?`)
+    .get(sessionId);
 }
 
 export default db;

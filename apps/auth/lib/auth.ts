@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
-import db from './db';
-import { Session, User } from './user';
+import db, { getSession, getUserById } from './db';
 
 const AUTH_SESSION_KEY = 'auth_session';
 
@@ -43,24 +42,18 @@ export async function verifyAuth() {
   }
 
   // 1.validate session
-  const dbsession = db
-    .prepare<
-      [string],
-      Session
-    >(`SELECT id, expires_at, user_id FROM sessions WHERE id = ?`)
-    .get(sessionId);
+  const dbsession = getSession(sessionId);
 
   if (!dbsession) {
     return noData;
   }
+
   if (dbsession.expires_at < Date.now()) {
     db.prepare(`DELETE FROM sessions WHERE id = ?`).run(dbsession.id);
     return noData;
   }
 
-  const dbUser = db
-    .prepare<[string], User>('SELECT id, email FROM users WHERE id = ?')
-    .get(dbsession.user_id);
+  const dbUser = getUserById(dbsession.user_id);
 
   return { user: dbUser, session: dbsession };
 }
